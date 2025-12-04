@@ -1,0 +1,157 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app
+  namespace: argocd
+  resourceVersion: "5321886"
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    directory:
+      jsonnet: {}
+      recurse: true
+    path: ./apps
+    repoURL: https://github.com/CyganekM/ArgoCD.git
+    targetRevision: master
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+status:
+  controllerNamespace: argocd
+  health:
+    lastTransitionTime: "2025-12-04T14:27:31Z"
+    status: Healthy
+  history:
+  - deployStartedAt: "2025-12-04T14:26:32Z"
+    deployedAt: "2025-12-04T14:26:33Z"
+    id: 0
+    initiatedBy:
+      automated: true
+    revision: 0113716e02ef47cdf04cb9fcb48609a65a52194f
+    source:
+      directory:
+        jsonnet: {}
+        recurse: true
+      path: ./apps
+      repoURL: https://github.com/CyganekM/ArgoCD.git
+      targetRevision: master
+  operationState:
+    finishedAt: "2025-12-04T14:26:33Z"
+    message: successfully synced (all tasks run)
+    operation:
+      initiatedBy:
+        automated: true
+      retry:
+        limit: 5
+      sync:
+        prune: true
+        revision: 0113716e02ef47cdf04cb9fcb48609a65a52194f
+        source:
+          directory:
+            jsonnet: {}
+            recurse: true
+          path: ./apps
+          repoURL: https://github.com/CyganekM/ArgoCD.git
+          targetRevision: master
+    phase: Succeeded
+    startedAt: "2025-12-04T14:26:32Z"
+    syncResult:
+      resources:
+      - group: ""
+        hookPhase: Running
+        kind: ConfigMap
+        message: configmap/nginx-index-html created
+        name: nginx-index-html
+        namespace: default
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: ""
+        hookPhase: Running
+        kind: Service
+        message: service/nginx-service created
+        name: nginx-service
+        namespace: default
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: apps
+        hookPhase: Running
+        images:
+        - nginx:1.25-alpine
+        kind: Deployment
+        message: deployment.apps/nginx-deployment created
+        name: nginx-deployment
+        namespace: default
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      - group: networking.k8s.io
+        hookPhase: Running
+        kind: Ingress
+        message: ingress.networking.k8s.io/ingress-sa created
+        name: ingress-sa
+        namespace: default
+        status: Synced
+        syncPhase: Sync
+        version: v1
+      revision: 0113716e02ef47cdf04cb9fcb48609a65a52194f
+      source:
+        directory:
+          jsonnet: {}
+          recurse: true
+        path: ./apps
+        repoURL: https://github.com/CyganekM/ArgoCD.git
+        targetRevision: master
+  reconciledAt: "2025-12-04T16:45:10Z"
+  resourceHealthSource: appTree
+  resources:
+  - kind: ConfigMap
+    name: nginx-index-html
+    namespace: default
+    status: Synced
+    version: v1
+  - kind: Service
+    name: nginx-service
+    namespace: default
+    status: Synced
+    version: v1
+  - group: apps
+    kind: Deployment
+    name: nginx-deployment
+    namespace: default
+    status: Synced
+    version: v1
+  - group: networking.k8s.io
+    kind: Ingress
+    name: ingress-sa
+    namespace: default
+    status: Synced
+    version: v1
+  sourceHydrator: {}
+  sourceType: Directory
+  summary:
+    externalURLs:
+    - http://app-agro.k8s-15.sa/
+    images:
+    - busybox
+    - nginx:1.25-alpine
+  sync:
+    comparedTo:
+      destination:
+        namespace: default
+        server: https://kubernetes.default.svc
+      source:
+        directory:
+          jsonnet: {}
+          recurse: true
+        path: ./apps
+        repoURL: https://github.com/CyganekM/ArgoCD.git
+        targetRevision: master
+    revision: 0113716e02ef47cdf04cb9fcb48609a65a52194f
+    status: Synced

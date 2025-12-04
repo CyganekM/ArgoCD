@@ -1,0 +1,16 @@
+project: default
+source:
+  repoURL: https://github.com/CyganekM/ArgoCD.git
+  path: ./apps
+  targetRevision: master
+  directory:
+    recurse: true
+    jsonnet: {}
+destination:
+  server: https://kubernetes.default.svc
+  namespace: default
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+    enabled: true
