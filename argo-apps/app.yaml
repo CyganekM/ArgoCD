@@ -1,16 +1,21 @@
-project: default
-source:
-  repoURL: https://github.com/CyganekM/ArgoCD.git
-  path: ./apps
-  targetRevision: master
-  directory:
-    recurse: true
-    jsonnet: {}
-destination:
-  server: https://kubernetes.default.svc
-  namespace: default
-syncPolicy:
-  automated:
-    prune: true
-    selfHeal: true
-    enabled: true
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app
+  namespace: argocd
+spec:
+  destination:
+    namespace: apps
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./apps
+    repoURL: https://github.com/CyganekM/ArgoCD.git
+    targetRevision: master
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
