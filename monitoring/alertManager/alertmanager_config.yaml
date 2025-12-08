@@ -6,7 +6,7 @@ metadata:
 data:
   alertmanager.yml: |
     global:
-      slack_api_url: '${SLACK_WEBHOOK_URL}'
+      slack_api_url: ''
     route:
       group_by: ['alertname', 'pod']
       group_wait: 10s
