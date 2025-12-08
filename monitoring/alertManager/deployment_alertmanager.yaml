@@ -14,8 +14,11 @@ spec:
             - -c
           args:
             - |
+              # Получаем webhook URL из секрета
               WEBHOOK_URL="$$(cat /etc/secrets/slack-webhook-url)"
+              # Заменяем пустую строку в конфиге на реальный URL
               sed -i "s|slack_api_url: ''|slack_api_url: '$WEBHOOK_URL'|" /etc/alertmanager/alertmanager.yml
+              # Запускаем Alertmanager
               /bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml
           volumeMounts:
             - name: config
@@ -33,4 +36,3 @@ spec:
             items:
               - key: slack-webhook-url
                 path: slack-webhook-url
-  selector:
