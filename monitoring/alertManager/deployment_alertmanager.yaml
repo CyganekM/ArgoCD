@@ -22,24 +22,32 @@ spec:
           args:
             - |
               # Получаем webhook URL из секрета
-              WEBHOOK_URL="$$(cat /etc/secrets/slack-webhook-url)"
-              echo "Webhook URL: $${WEBHOOK_URL:0:30}..."
-              # Заменяем пустую строку в конфиге на реальный URL
-              sed -i "s|slack_api_url: ''|slack_api_url: '$WEBHOOK_URL'|g" /etc/alertmanager/alertmanager.yml
-              # Проверяем замену
-              echo "Config after replacement:"
-              grep slack_api_url /etc/alertmanager/alertmanager.yml
-              # Запускаем Alertmanager
-              exec /bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml
+              WEBHOOK_URL="$(cat /etc/secrets/slack-webhook-url)"
+              echo "Webhook URL loaded, length: ${#WEBHOOK_URL}"
+              
+              # Создаем новый конфиг в временной директории с заменой
+              cat /etc/alertmanager/alertmanager.yml | \
+                sed "s|slack_api_url: ''|slack_api_url: '$WEBHOOK_URL'|" > /alertmanager/alertmanager.yml
+              
+              # Проверяем что замена произошла
+              echo "=== Config after replacement ==="
+              grep slack_api_url /alertmanager/alertmanager.yml
+              echo "================================"
+              
+              # Запускаем Alertmanager с новым конфигом
+              exec /bin/alertmanager --config.file=/alertmanager/alertmanager.yml --storage.path=/alertmanager
           ports:
             - containerPort: 9093
               name: http
           volumeMounts:
             - name: config
               mountPath: /etc/alertmanager
+              readOnly: true
             - name: slack-secret
               mountPath: /etc/secrets
               readOnly: true
+            - name: data
+              mountPath: /alertmanager
       volumes:
         - name: config
           configMap:
@@ -50,6 +58,8 @@ spec:
             items:
               - key: slack-webhook-url
                 path: slack-webhook-url
+        - name: data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
