@@ -1,3 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: alertmanager
+  ports:
+    - name: web
+      port: 9093
+      targetPort: 9093
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      receiver: 'slack-notifications'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 5m
+
+    receivers:
+      - name: 'slack-notifications'
+        slack_configs:
+          - api_url: 'REPLACE_ME'
+            channel: 'promethus_alert'
+            text: |
+              *Alert:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+              *Status:* {{ .Status }}
+              *Labels:* {{ range .CommonLabels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+            send_resolved: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,60 +55,83 @@ spec:
       labels:
         app: alertmanager
     spec:
-      containers:
-        - name: alertmanager
-          image: prom/alertmanager
+      initContainers:
+        - name: config-reloader
+          image: busybox
+          command: ['sh', '-c']
           args:
-            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - |
+              # Получаем секрет и подставляем в конфиг
+              sed -i "s|REPLACE_ME|$SLACK_API_URL|g" /etc/alertmanager/alertmanager.yml
+          env:
+            - name: SLACK_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-secrets
+                  key: slack-api-url
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
-            - name: secret-volume
-              mountPath: /etc/alertmanager/secrets
-              readOnly: true
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.25.0
+          args:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+          ports:
+            - containerPort: 9093
+              name: http
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/alertmanager
+            - name: storage-volume
+              mountPath: /alertmanager
       volumes:
         - name: config-volume
           configMap:
             name: alertmanager-config
-        - name: secret-volume
-          secret:
-            secretName: alertmanager-secrets
-
+        - name: storage-volume
+          emptyDir: {}
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: alertmanager
+  name: alertmanager-nodeport
   namespace: monitoring
 spec:
-  ports:
-    - name: web
-      port: 9093
-      targetPort: 9093
+  type: NodePort
   selector:
     app: alertmanager
-
+  ports:
+    - protocol: TCP
+      port: 9093
+      targetPort: 9093
+      nodePort: 31004
 ---
-
-apiVersion: v1
-kind: ConfigMap
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: alertmanager-config
+  name: stress-test
   namespace: monitoring
-data:
-  alertmanager.yml: |
-    global:
-      resolve_timeout: 5m
-    route:
-      receiver: 'slack'
-      group_wait: 10s
-      group_interval: 30s
-      repeat_interval: 1h
-    receivers:
-      - name: 'slack'
-        slack_configs:
-          - api_url_file: /etc/alertmanager/secrets/slack-api-url
-            channel: '#courses_notifications'
-            icon_emoji: ':warning:'
-            send_resolved: true
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stress-test
+  template:
+    metadata:
+      labels:
+        app: stress-test
+    spec:
+      containers:
+        - name: stress-container
+          image: polinux/stress
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          command: ["stress"]
+          args: ["--cpu", "2", "--vm", "1", "--vm-bytes", "100M", "--timeout", "300s"]
