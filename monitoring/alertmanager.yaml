@@ -12,34 +12,6 @@ spec:
       port: 9093
       targetPort: 9093
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: alertmanager-config
-  namespace: monitoring
-data:
-  alertmanager.yml: |
-    global:
-      resolve_timeout: 5m
-
-    route:
-      receiver: 'slack-notifications'
-      group_wait: 10s
-      group_interval: 1m
-      repeat_interval: 5m
-
-    receivers:
-      - name: 'slack-notifications'
-        slack_configs:
-          - api_url: 'REPLACE_ME'
-            channel: 'promethus_alert'
-            text: |
-              *Alert:* {{ .CommonAnnotations.summary }}
-              *Description:* {{ .CommonAnnotations.description }}
-              *Status:* {{ .Status }}
-              *Labels:* {{ range .CommonLabels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
-            send_resolved: true
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -55,43 +27,27 @@ spec:
       labels:
         app: alertmanager
     spec:
-      initContainers:
-        - name: config-reloader
-          image: busybox
-          command: ['sh', '-c']
-          args:
-            - |
-              # Получаем секрет и подставляем в конфиг
-              sed -i "s|REPLACE_ME|$SLACK_API_URL|g" /etc/alertmanager/alertmanager.yml
-          env:
-            - name: SLACK_API_URL
-              valueFrom:
-                secretKeyRef:
-                  name: alertmanager-secrets
-                  key: slack-api-url
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/alertmanager
       containers:
         - name: alertmanager
-          image: prom/alertmanager:v0.25.0
+          image: prom/alertmanager:v0.27.0
           args:
-            - '--config.file=/etc/alertmanager/alertmanager.yml'
-            - '--storage.path=/alertmanager'
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - "--storage.path=/alertmanager"
           ports:
             - containerPort: 9093
-              name: http
+          env:
+            - name: SLACK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-slack
+                  key: slack_url
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
-            - name: storage-volume
-              mountPath: /alertmanager
       volumes:
         - name: config-volume
           configMap:
             name: alertmanager-config
-        - name: storage-volume
-          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
