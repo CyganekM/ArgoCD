@@ -63,24 +63,6 @@ data:
         annotations:
           summary: "Test Alert - Always Firing"
           description: "This alert should always be firing to test Alertmanager"
-  
-      - alert: AlertmanagerDown
-        expr: up{job="alertmanager"} == 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Alertmanager is down"
-          description: "Alertmanager {{ \$labels.instance }} is not reachable"
-  
-      - alert: PrometheusDown
-        expr: up{job="prometheus"} == 0
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Prometheus is down"
-          description: "Prometheus instance {{ \$labels.instance }} is not responding"
   prometheus.yml: |-
     global:
       scrape_interval: 5s
