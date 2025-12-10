@@ -106,10 +106,6 @@ data:
         kubernetes_sd_configs:
         - role: endpoints
         scheme: https
-    #ADD
-      - job_name: 'alertmanager'
-        static_configs:
-          - targets: ['alertmanager-service.monitoring.svc:9093']
 
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
