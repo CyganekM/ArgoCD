@@ -39,8 +39,8 @@ spec:
             - name: SLACK_URL
               valueFrom:
                 secretKeyRef:
-                  name: alertmanager-slack
-                  key: slack_url
+                  name: alertmanager-secrets
+                  key: slack-api-url
           volumeMounts:
             - name: config-volume
               mountPath: /etc/alertmanager
