@@ -53,6 +53,34 @@ data:
           severity: slack
         annotations:
           summary: High Memory Usage
+    - name: test-alerts
+      rules:
+      - alert: AlwaysFiring
+        expr: vector(1)
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Test Alert - Always Firing"
+          description: "This alert should always be firing to test Alertmanager"
+  
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager is down"
+          description: "Alertmanager {{ \$labels.instance }} is not reachable"
+  
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus instance {{ \$labels.instance }} is not responding"
   prometheus.yml: |-
     global:
       scrape_interval: 5s
@@ -78,6 +106,10 @@ data:
         kubernetes_sd_configs:
         - role: endpoints
         scheme: https
+    #ADD
+      - job_name: 'alertmanager'
+        static_configs:
+          - targets: ['alertmanager-service.monitoring.svc:9093']
 
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
