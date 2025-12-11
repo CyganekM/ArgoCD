@@ -41,3 +41,23 @@ spec:
     - port: 9093
       targetPort: 9093
   type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-alertmanager
+  annotations:
+    nginx.ingress.kubernetes.io/server-alias: "alertmanager.k8s-16.sa"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: alertmanager.k8s-15.sa
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: alertmanager
+                port:
+                  number: 9093
