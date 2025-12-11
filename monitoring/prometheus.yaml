@@ -63,6 +63,16 @@ data:
         annotations:
           summary: "Test Alert - Always Firing"
           description: "This alert should always be firing to test Alertmanager"
+    - name: pod-cpu-alerts
+       rules:
+       - alert: HighPodCPUUsage
+         expr: sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[2m])) > 0.5
+         for: 2m
+         labels:
+           severity: slack
+         annotations:
+           summary: "CPU overload on pod {{ $labels.pod }}"
+           description: "Pod {{ $labels.pod }} in {{ $labels.namespace }} has CPU usage > 0.5 core for 2m."
   prometheus.yml: |-
     global:
       scrape_interval: 5s
