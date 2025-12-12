@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-test-rules
+  namespace: monitoring
+data:
+  test-alerts.yaml: |
+    groups:
+    - name: test-alerts
+      rules:
+      - alert: TestAlertAlwaysFiring
+        expr: vector(1)
+        labels:
+          severity: test
+        annotations:
+          summary: "ТЕСТ: Проверка AlertManager"
+          description: "Это тестовое сообщение. Игнорируйте."
