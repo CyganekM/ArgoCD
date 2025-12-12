@@ -55,9 +55,20 @@ data:
         expr: sum(rate(container_cpu_usage_seconds_total{image!=""}[1m])) by (pod) > 0.8
         for: 1m
         labels:
-          severity: slack
+          severity: warning
         annotations:
-          summary: High Memory Usage
+          summary: High Memory Usage    
+    - name: CPU overload alert
+      rules:
+      - alert: PodHighCpuUsage
+        expr: (sum(rate(container_cpu_usage_seconds_total{container!=""}[3m])) by (pod, container) / sum(container_spec_cpu_quota{container!=""}/container_spec_cpu_period{container!=""}) by (pod, container) * 100) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Container High CPU utilization (instance {{ $labels.instance }})
+          description: "Container CPU utilization is above 5%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
   prometheus.yml: |-
     global:
       scrape_interval: 5s
