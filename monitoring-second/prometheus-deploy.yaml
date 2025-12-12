@@ -57,7 +57,7 @@ data:
         labels:
           severity: warning
         annotations:
-          summary: High Memory Usage    
+          summary: CPU    
     - name: CPU overload alert
       rules:
       - alert: PodHighCpuUsage
