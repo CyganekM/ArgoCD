@@ -18,3 +18,26 @@ jobs:
           echo "Username input: ${{ github.event.inputs.username }}"
           echo "${{ secrets.BASTION_HOST }} jenkins.k8s-15.sa" | sudo tee -a /etc/hosts
           curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
+          sleep 15
+          LAST_BUILD_JSON=$(curl -s -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/lastBuild/api/json")
+          if [ "$RESULT" = "SUCCESS" ]; then
+            echo "✅ User EXISTS"
+            echo "user_exists=true" >> $GITHUB_OUTPUT
+          elif [ "$RESULT" = "FAILURE" ]; then
+            echo "❌ User does NOT exist"
+            echo "user_exists=false" >> $GITHUB_OUTPUT
+            # НЕ выходим с ошибкой здесь - проверяем в следующем шаге
+          else
+            echo "⚠️ Unknown result: $RESULT"
+            echo "user_exists=unknown" >> $GITHUB_OUTPUT
+          fi
+      - name: Fail if user doesn't exist
+        if: steps.user_check.outputs.user_exists == 'false'
+        run: |
+          echo "❌ User does not exist - failing GitHub Action"
+          exit 1
+
+      - name: Success if user exists
+        if: steps.user_check.outputs.user_exists == 'true'
+        run: |
+          echo "✅ User exists - GitHub Action successful"
