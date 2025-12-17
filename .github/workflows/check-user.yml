@@ -20,7 +20,8 @@ jobs:
           curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
           sleep 15
           LAST_BUILD_JSON=$(curl -s GET -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/lastBuild/api/json")
-          RESULT=$(echo "$LAST_BUILD" | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
+          RESULT=$(echo $LAST_BUILD | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
+          echo LAST_BUILD_JSON
           echo $RESULT
           if [ $RESULT = "SUCCESS" ]; then
             echo "✅ User EXISTS"
