@@ -16,5 +16,5 @@ jobs:
       - name: Trigger Jenkins Job
         run: |
           echo "Username input: ${{ github.event.inputs.username }}"
-          echo "${{ secrets.BASTION_HOST }} jenkins.k8s-15.sa" >> /etc/hosts
+          echo "${{ secrets.BASTION_HOST }} jenkins.k8s-15.sa" | sudo tee -a /etc/hosts
           curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_TOKEN }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
