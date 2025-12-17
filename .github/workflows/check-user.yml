@@ -19,8 +19,9 @@ jobs:
           echo "${{ secrets.BASTION_HOST }} jenkins.k8s-15.sa" | sudo tee -a /etc/hosts
           curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
           sleep 15
-          LAST_BUILD_JSON=$(curl -s -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/lastBuild/api/json")
+          LAST_BUILD_JSON=$(curl -s GET -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/lastBuild/api/json")
           RESULT=$(echo "$LAST_BUILD" | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
+          echo LAST_BUILD_JSON
           if [ "$RESULT" = "SUCCESS" ]; then
             echo "✅ User EXISTS"
             echo "user_exists=true" >> $GITHUB_OUTPUT
