@@ -21,26 +21,13 @@ jobs:
           sleep 15
           LAST_BUILD=$(curl -s GET -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_NAME }}/lastBuild/api/json")
           RESULT=$(echo $LAST_BUILD | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
-          echo $LAST_BUILD
-          echo $RESULT
           if [ $RESULT = "SUCCESS" ]; then
             echo "✅ User EXISTS"
-            echo "user_exists=true" >> $GITHUB_OUTPUT
+            exit 0
           elif [ $RESULT = "FAILURE" ]; then
             echo "❌ User does NOT exist"
-            echo "user_exists=false" >> $GITHUB_OUTPUT
-            # НЕ выходим с ошибкой здесь - проверяем в следующем шаге
+            exit 1
           else
             echo "⚠️ Unknown result: $RESULT"
-            echo "user_exists=unknown" >> $GITHUB_OUTPUT
+            exit 1
           fi
-      - name: Fail if user doesn't exist
-        if: steps.user_check.outputs.user_exists == 'false'
-        run: |
-          echo "❌ User does not exist - failing GitHub Action"
-          exit 1
-
-      - name: Success if user exists
-        if: steps.user_check.outputs.user_exists == 'true'
-        run: |
-          echo "✅ User exists - GitHub Action successful"
