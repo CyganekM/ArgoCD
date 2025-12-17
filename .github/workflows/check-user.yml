@@ -1,0 +1,19 @@
+name: Check User Existence via Jenkins
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: 'Username to check in /etc/passwd'
+        required: true
+        type: string
+
+jobs:
+  trigger-jenkins-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Jenkins Job
+        run: |
+          echo "${{ secrets.BASTION_HOST }} jenkins.k8s-15.sa" >> /etc/hosts
+          curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_TOKEN }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
