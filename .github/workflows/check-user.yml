@@ -1,22 +1,20 @@
-name: Trigger Jenkins job that checks if user exists in /etc/passwd
+name: Check User Existence via Jenkins
+
 on:
   workflow_dispatch:
     inputs:
-      user_name:
-        description: User to check if they exist in /etc/passwd
+      username:
+        description: 'Username to check in /etc/passwd'
         required: true
-        default: root
+        type: string
+
 jobs:
-  check_user:
+  trigger-jenkins-job:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository to the runner
-        uses: actions/checkout@v4
-      - name: Check if user exists in /etc/passwd
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          script: |
-            echo "Username input: ${{ github.event.inputs.username }}"
-            cat /etc/hosts
-            echo "178.124.206.53 jenkins.k8s-15.sa" >> /etc/hosts
-            curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_TOKEN }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
+      - name: Trigger Jenkins Job
+        run: |
+          echo "Username input: ${{ github.event.inputs.username }}"
+          echo "${{ secrets.BASTION_HOST }} jenkins.k8s-15.sa" | sudo tee -a /etc/hosts
+          curl -X POST -u "${{ secrets.JENKINS_ADMIN }}:${{ secrets.JENKINS_TOKEN }}" "${{ secrets.JENKINS_URL }}/job/${{ secrets.JOB_TOKEN }}/buildWithParameters?USERNAME=${{ secrets.JENKINS_USER }}"
